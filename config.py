@@ -25,5 +25,5 @@ BM25_WEIGHT = float(os.getenv("BM25_WEIGHT", "0.4"))
 SEMANTIC_WEIGHT = float(os.getenv("SEMANTIC_WEIGHT", "0.6"))
 
 # Upload
-SUPPORTED_EXTENSIONS = [".pdf", ".docx", ".txt", ".xlsx"]
+SUPPORTED_EXTENSIONS = [".pdf"]
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
