@@ -1,0 +1,10 @@
+.venv
+.git
+__pycache__
+*.pyc
+node_modules
+.env.local
+*.egg-info
+dist
+build
+test_doc

@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  # ==========================================================================
+  # Qdrant — Vector database
+  # ==========================================================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: lawrag-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # ==========================================================================
+  # LLM Service — OpenAI-compatible API wrapper (port 8001)
+  # ==========================================================================
+  llm_service:
+    build:
+      context: .
+      dockerfile: llm_service/Dockerfile
+    container_name: lawrag-llm
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - LLM_SERVICE_PORT=8001
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+
+  # ==========================================================================
+  # RAG Service — Document upload, retrieval, QA (port 8000)
+  # ==========================================================================
+  rag_service:
+    build:
+      context: .
+      dockerfile: rag_service/Dockerfile
+    container_name: lawrag-rag
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - LLM_SERVICE_URL=http://llm_service:8001
+      - RAG_SERVICE_PORT=8000
+    volumes:
+      - rag_uploads:/app/uploads
+    depends_on:
+      - qdrant
+      - llm_service
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Frontend — React/Vite dev server (port 5173)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lawrag-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_TARGET=http://rag_service:8000
+    depends_on:
+      - rag_service
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  rag_uploads:
